@@ -26,13 +26,17 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px 8px
 </head>
 <body><div id="app"></div><div id="modal" class="modal hidden"></div>
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import{getFirestore,doc,getDoc,setDoc,addDoc,collection,query,where,orderBy,limit,getDocs,updateDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import{initializeApp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import{getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import{getFirestore,doc,getDoc,setDoc,addDoc,collection,query,where,getDocs,updateDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig={apiKey:"AIzaSyCaMiE1Lu33a-CJTHBLu3gdTa-uLP_1xP0",authDomain:"dsohisab.firebaseapp.com",projectId:"dsohisab",storageBucket:"dsohisab.firebasestorage.app",messagingSenderId:"177531392674",appId:"1:177531392674:web:4866f17384fa979d4afdfb",measurementId:"G-BP5JPQN2VG"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 let me=null,profile=null,active="dashboard",cache={customers:[],dsos:[],tx:[]};
+
+function startupError(e){
+  document.getElementById("app").innerHTML=`<div class="auth"><div class="auth-card"><div class="brand">📒 MFS Hisab Cloud</div><div class="alert">Firebase চালু হতে সমস্যা হয়েছে।<br><small>${esc(e?.message||e||"Unknown error")}</small></div><button class="btn primary" style="width:100%" onclick="location.reload()">Reload</button></div></div>`;
+}
 const money=n=>"৳ "+Number(n||0).toLocaleString("en-BD",{maximumFractionDigits:2});
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const date=t=>t?.toDate?t.toDate().toLocaleString("en-BD"):"-";
@@ -40,19 +44,34 @@ function toast(s,ok=false){let x=document.getElementById("toast");if(!x)return;x
 function close(){document.getElementById("modal").classList.add("hidden")}
 function modal(h){let x=document.getElementById("modal");x.innerHTML='<div class="modalbox">'+h+"</div>";x.classList.remove("hidden")}
 function err(e){return({"auth/email-already-in-use":"এই email আগে থেকেই আছে। Login করুন।","auth/invalid-credential":"Email বা password ভুল।","auth/invalid-email":"সঠিক email দিন।","auth/weak-password":"Password কমপক্ষে 6 অক্ষরের দিন।","auth/network-request-failed":"Internet connection check করুন।"}[e?.code]||e?.message||"সমস্যা হয়েছে।")}
-onAuthStateChanged(auth,async u=>{me=u;if(!u){renderAuth();return}let s=await getDoc(doc(db,"users",u.uid));if(s.exists()){profile={id:u.uid,...s.data()};renderApp()}else renderSetup()});
+onAuthStateChanged(auth,async u=>{
+  try{
+    me=u;
+    if(!u){renderAuth();return}
+    let s=await getDoc(doc(db,"users",u.uid));
+    if(s.exists()){profile={id:u.uid,...s.data()};renderApp()}
+    else renderSetup();
+  }catch(e){
+    startupError(e);
+  }
+});
 function renderAuth(){app.innerHTML=`<div class="auth"><div class="auth-card"><div class="brand">📒 MFS Hisab Cloud</div><p class="muted">দোকানের Cash, DSO ও Customer হিসাব এক জায়গায়।</p><div id="am" class="alert hidden"></div><label>Email</label><input id="e" type="email" placeholder="you@example.com"><label>Password</label><input id="p" type="password" placeholder="কমপক্ষে 6 অক্ষর"><div class="actions"><button class="btn primary" id="login">Login</button><button class="btn success" id="signup">New account / Owner</button></div><p class="note" style="margin-top:16px">প্রথম account Owner হবে। পরে Owner Dashboard থেকে DSO যোগ করা যাবে।</p></div></div>`;
 login.onclick=async()=>{try{await signInWithEmailAndPassword(auth,e.value.trim(),p.value)}catch(x){am.textContent=err(x);am.classList.remove("hidden")}};
 signup.onclick=async()=>{try{if(p.value.length<6)throw{code:"auth/weak-password"};let c=await createUserWithEmailAndPassword(auth,e.value.trim(),p.value);await setDoc(doc(db,"users",c.user.uid),{email:c.user.email,role:"owner",name:"Owner",createdAt:serverTimestamp()})}catch(x){am.textContent=err(x);am.classList.remove("hidden")}}}
 function renderSetup(){app.innerHTML=`<div class="auth"><div class="auth-card"><h2>👤 Owner Profile</h2><p class="muted">আপনার দোকানের নাম/নিজের নাম দিন।</p><label>নাম</label><input id="n" placeholder="যেমন: Albhi"><button class="btn primary" style="width:100%;margin-top:18px" id="save">Continue</button></div></div>`;save.onclick=async()=>{await setDoc(doc(db,"users",me.uid),{email:me.email,role:"owner",name:n.value.trim()||"Owner",createdAt:serverTimestamp()});location.reload()}}
 async function load(){let owner=profile.role==="owner"?me.uid:profile.ownerId;
 let cq=profile.role==="owner"?query(collection(db,"customers"),where("ownerId","==",owner)):query(collection(db,"customers"),where("dsoId","==",me.uid));
-let tq=profile.role==="owner"?query(collection(db,"transactions"),where("ownerId","==",owner),orderBy("createdAt","desc"),limit(300)):query(collection(db,"transactions"),where("dsoId","==",me.uid),orderBy("createdAt","desc"),limit(300));
-let cs=await getDocs(cq),ts=await getDocs(tq);cache.customers=cs.docs.map(x=>({id:x.id,...x.data()}));cache.tx=ts.docs.map(x=>({id:x.id,...x.data()}));
+let tq=profile.role==="owner"?query(collection(db,"transactions"),where("ownerId","==",owner)):query(collection(db,"transactions"),where("dsoId","==",me.uid));
+let cs=await getDocs(cq),ts=await getDocs(tq);cache.customers=cs.docs.map(x=>({id:x.id,...x.data()}));cache.tx=ts.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,300);
 if(profile.role==="owner"){let ds=await getDocs(query(collection(db,"users"),where("ownerId","==",owner),where("role","==","dso")));cache.dsos=ds.docs.map(x=>({id:x.id,...x.data()}))}else cache.dsos=[]}
 function renderApp(){app.innerHTML=`<header class="top"><div class="brand">📒 MFS Hisab Cloud</div><div class="row"><span class="muted">${esc(profile.name)} • ${profile.role==="owner"?"Owner":"DSO"}</span><button class="btn ghost small" id="logout">Logout</button></div></header><main class="wrap"><div id="toast" class="alert hidden"></div><div class="nav" id="nav"></div><div id="view"></div></main>`;logout.onclick=()=>signOut(auth);nav();go("dashboard")}
 function nav(){let a=profile.role==="owner"?[["dashboard","🏠 Dashboard"],["customers","👥 Customers"],["dsos","👤 DSO"],["transactions","📒 Transactions"]]:[["dashboard","🏠 My Dashboard"],["customers","👥 Customers"],["transactions","📒 My Transactions"]];document.getElementById("nav").innerHTML=a.map(x=>`<button data-k="${x[0]}">${x[1]}</button>`).join("");document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.k))}
-async function go(k){active=k;document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.k===k));await load();({dashboard:dash,customers:customers,dsos:dsos,transactions:transactions}[k])()}
+async function go(k){
+  active=k;
+  document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.k===k));
+  try{await load();({dashboard:dash,customers:customers,dsos:dsos,transactions:transactions}[k])()}
+  catch(e){view.innerHTML=`<div class="card"><h2>Firebase Database access error</h2><div class="alert">${esc(e?.message||e)}</div><p class="muted">Firebase Console → Firestore Database → Rules এ এই ZIP-এর <b>firestore.rules</b> code Publish করুন।</p></div>`}
+}
 function totals(){let i=0,o=0,d=0;cache.tx.forEach(t=>t.type==="cash_in"?i+=+t.amount:o+=+t.amount);cache.customers.forEach(c=>d+=+c.due||0);return{i,o,b:i-o,d}}
 function dash(){let x=totals();view.innerHTML=`<div class="between"><div><h2>স্বাগতম, ${esc(profile.name)} 👋</h2><p class="muted">দোকানের হিসাব এক নজরে।</p></div><button class="btn primary" id="nt">+ Transaction</button></div><div class="grid stats section"><div class="card"><div class="stat-title">Cash In</div><div class="stat">${money(x.i)}</div></div><div class="card"><div class="stat-title">Cash Out</div><div class="stat">${money(x.o)}</div></div><div class="card"><div class="stat-title">Net Balance</div><div class="stat">${money(x.b)}</div></div><div class="card"><div class="stat-title">Customer Baki</div><div class="stat">${money(x.d)}</div></div></div><div class="grid two section"><div class="card"><h3>Quick Actions</h3><div class="grid two" style="margin-top:12px"><button class="btn success" id="ci">💰 Cash In</button><button class="btn danger" id="co">💸 Cash Out</button><button class="btn ghost" id="ac">👥 Customer</button>${profile.role==="owner"?'<button class="btn ghost" id="ad">👤 DSO</button>':""}</div></div><div class="card"><h3>Recent</h3>${cache.tx.slice(0,6).map(row).join("")||'<p class="muted">কোনো transaction নেই।</p>'}</div></div>`;nt.onclick=()=>tx();ci.onclick=()=>tx("cash_in");co.onclick=()=>tx("cash_out");ac.onclick=customerModal;if(ad)ad.onclick=dsoModal}
 function row(t){return`<div class="between" style="padding:9px 0;border-bottom:1px solid var(--b)"><div><b>${esc(t.title||"Transaction")}</b><div class="note">${date(t.createdAt)}</div></div><span class="badge ${t.type==="cash_in"?"in":"out"}">${t.type==="cash_in"?"+":"-"} ${money(t.amount)}</span></div>`}
