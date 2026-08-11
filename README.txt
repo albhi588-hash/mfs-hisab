@@ -1,11 +1,9 @@
-MFS Hisab Cloud - Render upload package
+MFS Hisab Cloud - Firebase version
 
-1) Upload this ZIP to Render as a Static Site.
-2) Build command: leave empty.
-3) Publish Directory: .
-4) After deployment, open Firebase Console > Firestore Database > Rules.
-5) Copy the contents of firestore.rules from this ZIP into the Rules editor and click Publish.
-6) Firebase Authentication > Sign-in method: Email/Password must be Enabled.
-7) Then open the Render site and create/login with your email and password.
+1. Upload the contents of this ZIP to your Render Static Site.
+2. Firebase Authentication -> Sign-in method: Email/Password must be Enabled.
+3. Firebase Firestore -> Rules: copy firestore.rules and Publish.
+4. Open your Render URL and create the Owner account.
+5. If an old white page is cached, press Ctrl+F5.
 
-Firebase project already configured in index.html for project: dsohisab.
+This version fixes the "save is not defined" browser error by using explicit DOM element lookup instead of relying on element IDs becoming JavaScript globals.
