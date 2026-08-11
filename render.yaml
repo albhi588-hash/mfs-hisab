@@ -3,5 +3,5 @@ services:
     name: mfs-hisab
     runtime: static
     buildCommand: ""
-    staticPublishPath: ./public
+    staticPublishPath: .
     autoDeploy: true

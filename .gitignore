@@ -1,4 +1,3 @@
-# Local Firebase/secret files
+firebase-debug.log
 .env
 .env.*
-firebase-debug.log

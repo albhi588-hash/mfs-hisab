@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MFS Hisab Cloud</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Arial;background:#f4f7fb;color:#172033}
+header{background:#111827;color:white;padding:15px}.wrap{max-width:1100px;margin:auto}.top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+nav{display:flex;gap:7px;overflow:auto;margin-top:12px}button{border:0;border-radius:10px;padding:10px 13px;background:#2563eb;color:#fff;font-weight:700;cursor:pointer;white-space:nowrap}
+.muted{background:#64748b}.danger{background:#dc2626}.green{background:#059669}
+main{padding:18px 10px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:#fff;padding:16px;border-radius:16px;box-shadow:0 4px 18px #0000000b}.num{font-size:24px;font-weight:800;margin-top:6px}.label{font-size:13px;color:#64748b}
+.panel{margin-top:15px}.form{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}label{font-weight:700;font-size:13px}input,select,textarea{width:100%;padding:11px;border:1px solid #dbe2ea;border-radius:10px;margin-top:5px;font-size:15px}textarea{min-height:75px}.full{grid-column:1/-1}
+.hidden{display:none!important}.tablewrap{overflow:auto}.table{width:100%;min-width:720px;border-collapse:collapse}.table th,.table td{padding:10px;border-bottom:1px solid #e8edf3;text-align:left;font-size:13px}.pill{padding:4px 8px;background:#eef2ff;color:#3730a3;border-radius:999px;font-size:12px;font-weight:700}
+.ok{color:#047857;font-weight:800}.bad{color:#b91c1c;font-weight:800}.login{max-width:420px;margin:12vh auto}.toast{position:fixed;right:15px;bottom:15px;background:#111827;color:white;padding:12px 15px;border-radius:12px;display:none}
+@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div id="loginPage" class="login card">
+<h2>📒 MFS Hisab Cloud</h2>
+<p>Owner / DSO Login</p>
+<div class="form" style="display:block">
+<label>Email</label><input id="email" type="email" placeholder="your@email.com">
+<label style="display:block;margin-top:10px">Password</label><input id="password" type="password">
+<button style="margin-top:12px;width:100%" onclick="login()">Login</button>
+<button class="green" style="margin-top:8px;width:100%" onclick="register()">New account</button>
+</div>
+<p id="loginMsg"></p>
+</div>
+
+<div id="app" class="hidden">
+<header><div class="wrap">
+<div class="top"><b>📒 MFS Hisab Cloud</b><span id="userInfo"></span></div>
+<nav>
+<button onclick="show('dashboard')">Dashboard</button><button onclick="show('new')">+ Transaction</button>
+<button onclick="show('customers')">Customer Baki</button><button onclick="show('dsos')">DSO</button>
+<button onclick="show('history')">History</button><button class="muted" onclick="logout()">Logout</button>
+</nav></div></header>
+<main class="wrap">
+<section id="dashboard" class="page">
+<div class="grid">
+<div class="card"><div class="label">Expected Cash</div><div class="num" id="expected">৳0</div></div>
+<div class="card"><div class="label">Actual Cash</div><div class="num" id="actual">৳0</div></div>
+<div class="card"><div class="label">Difference</div><div class="num" id="diff">৳0</div></div>
+<div class="card"><div class="label">Customer Baki</div><div class="num" id="baki">৳0</div></div>
+</div>
+<div class="card panel"><h3>Daily Cash</h3><div class="form">
+<div><label>Opening Cash</label><input id="opening" type="number"></div>
+<div><label>Actual Cash</label><input id="actualInput" type="number"></div>
+<div class="full"><button onclick="saveSettings()">Save</button></div></div><p id="cashStatus"></p></div>
+<div class="card panel"><h3>DSO Summary</h3><div id="dsoSummary"></div></div>
+</section>
+
+<section id="new" class="page hidden"><div class="card"><h2>নতুন লেনদেন</h2><div class="form">
+<div><label>Type</label><select id="type">
+<option value="A">A — DSO তোমাকে টাকা দিল</option><option value="B">B — DSO-এর টাকা রেখে দিল</option>
+<option value="C">C — DSO-এর জন্য Cash-In</option><option value="D">D — DSO টাকা নিল</option>
+<option value="E">E — নিজের Cash দিয়ে DSO-এর কাজ</option><option value="F">F — DSO টাকা ফেরত দিল</option>
+<option value="G">G — DSO তোমার কাছে পাওনা</option><option value="H">H — DSO-এর কাছে তোমার পাওনা</option>
+<option value="I">I — Customer-এর টাকা DSO-এর জন্য</option><option value="J">J — Customer Baki/Payment</option>
+<option value="OTHER_IN">Other Cash In</option><option value="OTHER_OUT">Other Cash Out</option>
+</select></div>
+<div><label>DSO</label><select id="dso"></select></div>
+<div><label>Customer/Number</label><input id="person"></div><div><label>Amount</label><input id="amount" type="number"></div>
+<div class="full"><label>Note</label><textarea id="note"></textarea></div>
+<div class="full"><button onclick="addTx()">Save Transaction</button></div>
+</div></div></section>
+
+<section id="customers" class="page hidden"><div class="card"><h2>Customer Baki</h2><div class="form">
+<div><label>Name/Number</label><input id="custName"></div><div><label>Amount</label><input id="custAmount" type="number"></div>
+<div><label>Type</label><select id="custType"><option value="baki">বাকি নিল</option><option value="pay">বাকি দিল</option></select></div>
+<div><button onclick="customerTx()">Save</button></div></div></div>
+<div class="card panel tablewrap"><table class="table"><thead><tr><th>Customer</th><th>Baki</th></tr></thead><tbody id="custTable"></tbody></table></div></section>
+
+<section id="dsos" class="page hidden"><div class="card"><h2>DSO</h2><div class="form">
+<div><label>DSO Name</label><input id="dsoName"></div><div><label>Phone</label><input id="dsoPhone"></div>
+<div class="full"><button onclick="addDSO()">Add DSO</button></div></div></div>
+<div class="card panel tablewrap"><table class="table"><thead><tr><th>Name</th><th>Phone</th><th>Balance</th></tr></thead><tbody id="dsoTable"></tbody></table></div></section>
+
+<section id="history" class="page hidden"><div class="card"><h2>History</h2><div class="tablewrap"><table class="table"><thead><tr><th>Date</th><th>Type</th><th>DSO/Person</th><th>Amount</th><th>Note</th></tr></thead><tbody id="historyTable"></tbody></table></div></div></section>
+</main></div><div id="toast" class="toast"></div>
+
+<script src="./config.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getFirestore,collection,addDoc,getDocs,query,where,doc,setDoc,getDoc,serverTimestamp,orderBy } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+/* ===== FIREBASE CONFIG =====
+   Replace these values with your Firebase Web App config.
+*/
+const firebaseConfig = window.FIREBASE_CONFIG;
+if (!firebaseConfig || firebaseConfig.apiKey === "PASTE_API_KEY") {
+  document.getElementById("loginMsg").textContent =
+    "Firebase config বসানো হয়নি। public/config.js ফাইলে তোমার Firebase Web App config বসাও।";
+  throw new Error("Firebase config missing");
+}
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+let current=null, dsos=[], tx=[], customers={};
+const labels={A:'DSO টাকা দিল',B:'DSO টাকা রেখে গেল',C:'DSO-এর Cash-In',D:'DSO টাকা নিল',E:'নিজের Cash দিয়ে DSO কাজ',F:'DSO টাকা ফেরত দিল',G:'DSO তোমার কাছে পাওনা',H:'DSO-এর কাছে তোমার পাওনা',I:'Customer-এর টাকা DSO-এর জন্য',J:'Customer Baki/Payment',OTHER_IN:'Other In',OTHER_OUT:'Other Out'};
+
+window.login=async()=>{try{await signInWithEmailAndPassword(auth,email.value,password.value)}catch(e){loginMsg.textContent=e.message}};
+window.register=async()=>{try{await createUserWithEmailAndPassword(auth,email.value,password.value)}catch(e){loginMsg.textContent=e.message}};
+window.logout=()=>signOut(auth);
+window.show=id=>{document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');render()};
+function toast(t){const x=document.getElementById('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',1800)}
+function money(n){return '৳'+Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
+async function load(){
+ const qd=query(collection(db,'users',current.uid,'dsos'),orderBy('name')); dsos=(await getDocs(qd)).docs.map(x=>({id:x.id,...x.data()}));
+ const qt=query(collection(db,'users',current.uid,'transactions'),orderBy('createdAt','desc')); tx=(await getDocs(qt)).docs.map(x=>({id:x.id,...x.data()}));
+ const qc=await getDocs(collection(db,'users',current.uid,'customers'));customers={};qc.forEach(x=>customers[x.id]={id:x.id,...x.data()});
+ const s=await getDoc(doc(db,'users',current.uid)); if(s.exists()){opening.value=s.data().opening||0;actualInput.value=s.data().actual||0}
+ render();
+}
+window.saveSettings=async()=>{await setDoc(doc(db,'users',current.uid),{opening:+opening.value||0,actual:+actualInput.value||0,email:current.email},{merge:true});render();toast('Saved')};
+window.addDSO=async()=>{let n=dsoName.value.trim(),p=dsoPhone.value.trim();if(!n)return toast('DSO name দিন');await addDoc(collection(db,'users',current.uid,'dsos'),{name:n,phone:p,createdAt:serverTimestamp()});dsoName.value='';dsoPhone.value='';await load();toast('DSO added')};
+window.addTx=async()=>{let a=+amount.value||0;if(a<=0)return toast('Amount দিন');await addDoc(collection(db,'users',current.uid,'transactions'),{type:type.value,dsoId:dso.value||null,person:person.value.trim(),amount:a,note:note.value.trim(),createdAt:serverTimestamp()});amount.value='';person.value='';note.value='';await load();show('history');toast('Saved')};
+window.customerTx=async()=>{let n=custName.value.trim(),a=+custAmount.value||0;if(!n||a<=0)return toast('Name/number ও amount দিন');let id=btoa(unescape(encodeURIComponent(n))).replace(/[^a-zA-Z0-9]/g,'').slice(0,80)||String(Date.now());let old=customers[id]?.baki||0;let baki=old+(custType.value==='baki'?a:-a);await setDoc(doc(db,'users',current.uid,'customers',id),{name:n,baki,lastAt:serverTimestamp()},{merge:true});await addDoc(collection(db,'users',current.uid,'transactions'),{type:'J',person:n,amount:a,note:custType.value==='baki'?'Customer বাকি নিয়েছে':'Customer বাকি দিয়েছে',createdAt:serverTimestamp()});await load();toast('Customer saved')};
+
+function dsoBalance(id){let b=0;tx.filter(t=>t.dsoId===id).forEach(t=>{if(['A','B','I','F'].includes(t.type))b+=+t.amount;if(['C','D','E'].includes(t.type))b-=+t.amount});return b}
+function cashFlow(){let f=0;tx.forEach(t=>{if(['A','B','F','OTHER_IN'].includes(t.type))f+=+t.amount;if(['C','D','E','D','OTHER_OUT'].includes(t.type))f-=+t.amount;if(t.type==='J'&&String(t.note).includes('দিয়েছে'))f+=+t.amount});return f}
+function render(){
+ dso.innerHTML='<option value="">— DSO —</option>'+dsos.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');
+ let op=+opening.value||0,ac=+actualInput.value||0,ex=op+cashFlow(),di=ac-ex;
+ expected.textContent=money(ex);actual.textContent=money(ac);diff.textContent=money(di);diff.className='num '+(di===0?'ok':'bad');
+ cashStatus.innerHTML=di===0?'<span class="ok">✅ Cash মিলেছে</span>':'<span class="bad">❌ গরমিল '+money(di)+'</span>';
+ baki.textContent=money(Object.values(customers).reduce((s,x)=>s+Math.max(0,+x.baki),0));
+ dsoSummary.innerHTML=dsos.map(x=>`<div style="padding:8px 0;display:flex;justify-content:space-between"><b>${esc(x.name)}</b><span class="pill">${money(dsoBalance(x.id))}</span></div>`).join('')||'No DSO';
+ dsoTable.innerHTML=dsos.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.phone)}</td><td>${money(dsoBalance(x.id))}</td></tr>`).join('');
+ custTable.innerHTML=Object.values(customers).map(x=>`<tr><td>${esc(x.name)}</td><td>${money(x.baki)}</td></tr>`).join('');
+ historyTable.innerHTML=tx.map(t=>{let d=dsos.find(x=>x.id===t.dsoId);return `<tr><td>${t.createdAt?.toDate?t.createdAt.toDate().toLocaleString():'-'}</td><td><span class="pill">${t.type} — ${labels[t.type]}</span></td><td>${esc(d?.name||t.person||'—')}</td><td>${money(t.amount)}</td><td>${esc(t.note)}</td></tr>`}).join('');
+}
+onAuthStateChanged(auth,async u=>{current=u;if(u){loginPage.classList.add('hidden');app.classList.remove('hidden');userInfo.textContent=u.email;await load()}else{loginPage.classList.remove('hidden');app.classList.add('hidden')}});
+</script>
+</body></html>
