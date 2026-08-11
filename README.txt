@@ -1,21 +1,22 @@
-MFS HISAB — FINAL RENDER VERSION
+MFS HISAB CLOUD — RENDER SETUP
 
-GitHub root must contain:
-index.html
-config.js
-render.yaml
-firebase/firestore.rules
-
-Render:
-Build Command: empty
-Publish Directory: .
+1) ZIP extract করুন।
+2) GitHub repository-তে index.html upload/replace করুন।
+3) Render Static Site → আপনার GitHub repo।
+4) Build Command: খালি রাখুন।
+5) Publish Directory: .
+6) Save/Deploy করুন।
 
 Firebase:
-- Authentication > Sign-in method > Email/Password: ON
-- Firestore Database: Create database
-- Paste firebase/firestore.rules into Firestore Rules and Publish
+- Project: dsohisab
+- Email/Password Authentication enabled থাকতে হবে।
+- Firestore Database তৈরি থাকতে হবে।
+- আপনার দেওয়া Firebase Web config index.html-এ বসানো আছে।
 
-Firebase config has already been inserted into config.js using the config supplied by the user.
+প্রথম login:
+- New account / Owner দিয়ে নিজের account বানান।
+- তারপর Owner Dashboard থেকে DSO account তৈরি করুন।
+- DSO তার email/password দিয়ে ফোনে একই Render link খুলে login করবে।
 
-IMPORTANT:
-Upload the FILES inside this ZIP to the GitHub repository root. Do not upload only the ZIP.
+গুরুত্বপূর্ণ:
+এটি একটি working MVP। বর্তমান Firestore rules logged-in users-এর access দেয়। Production ব্যবহারের আগে role-based security rules শক্ত করা উচিত।
