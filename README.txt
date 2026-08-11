@@ -1,19 +1,21 @@
-MFS HISAB — RENDER ROOT DEPLOYMENT
+MFS HISAB — FINAL RENDER VERSION
 
-GitHub structure:
+GitHub root must contain:
 index.html
 config.js
 render.yaml
 firebase/firestore.rules
 
 Render:
-Build Command: leave empty
+Build Command: empty
 Publish Directory: .
 
 Firebase:
-1. Authentication > Sign-in method > Email/Password = ON
-2. Firestore Database = Create database
-3. Paste firebase/firestore.rules into Firestore Rules and Publish
-4. public/config.js is now root config.js. Replace its values if needed.
+- Authentication > Sign-in method > Email/Password: ON
+- Firestore Database: Create database
+- Paste firebase/firestore.rules into Firestore Rules and Publish
 
-The Firebase Web config is already filled with the supplied project config.
+Firebase config has already been inserted into config.js using the config supplied by the user.
+
+IMPORTANT:
+Upload the FILES inside this ZIP to the GitHub repository root. Do not upload only the ZIP.

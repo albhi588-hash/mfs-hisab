@@ -1,10 +1,10 @@
-// Firebase Console > Project settings > Your apps > Web app থেকে এই values বসাও.
-// এই ফাইলটি client-side config; আসল security Firestore Rules দিয়ে করতে হবে.
+// Firebase Web App configuration
 window.FIREBASE_CONFIG = {
-  apiKey: "PASTE_API_KEY",
-  authDomain: "PASTE_PROJECT.firebaseapp.com",
-  projectId: "PASTE_PROJECT_ID",
-  storageBucket: "PASTE_PROJECT.firebasestorage.app",
-  messagingSenderId: "PASTE_SENDER_ID",
-  appId: "PASTE_APP_ID"
+  apiKey: "AIzaSyCaMiE1Lu33a-CJTHBLu3gdTa-uLP_1xP0",
+  authDomain: "dsohisab.firebaseapp.com",
+  projectId: "dsohisab",
+  storageBucket: "dsohisab.firebasestorage.app",
+  messagingSenderId: "177531392674",
+  appId: "1:177531392674:web:4866f17384fa979d4afdfb",
+  measurementId: "G-BP5JPQN2VG"
 };

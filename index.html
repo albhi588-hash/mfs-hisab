@@ -92,7 +92,7 @@ import { getFirestore,collection,addDoc,getDocs,query,where,doc,setDoc,getDoc,se
 const firebaseConfig = window.FIREBASE_CONFIG;
 if (!firebaseConfig || firebaseConfig.apiKey === "PASTE_API_KEY") {
   document.getElementById("loginMsg").textContent =
-    "Firebase config বসানো হয়নি। public/config.js ফাইলে তোমার Firebase Web App config বসাও।";
+    "Firebase config লোড হয়নি। config.js ফাইলটি GitHub-এ index.html-এর পাশে আছে কি না দেখুন।";
   throw new Error("Firebase config missing");
 }
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
