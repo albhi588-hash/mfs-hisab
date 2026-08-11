@@ -33,6 +33,7 @@ import{getFirestore,doc,getDoc,setDoc,addDoc,collection,query,where,getDocs,upda
 const firebaseConfig={apiKey:"AIzaSyCaMiE1Lu33a-CJTHBLu3gdTa-uLP_1xP0",authDomain:"dsohisab.firebaseapp.com",projectId:"dsohisab",storageBucket:"dsohisab.firebasestorage.app",messagingSenderId:"177531392674",appId:"1:177531392674:web:4866f17384fa979d4afdfb",measurementId:"G-BP5JPQN2VG"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 const $=id=>document.getElementById(id);
+const appEl=document.getElementById("app");
 let me=null,profile=null,active="dashboard",cache={customers:[],dsos:[],tx:[]};
 
 function startupError(e){
@@ -56,18 +57,18 @@ onAuthStateChanged(auth,async u=>{
     startupError(e);
   }
 });
-function renderAuth(){app.innerHTML=`<div class="auth"><div class="auth-card"><div class="brand">📒 MFS Hisab Cloud</div><p class="muted">দোকানের Cash, DSO ও Customer হিসাব এক জায়গায়।</p><div id="am" class="alert hidden"></div><label>Email</label><input id="e" type="email" placeholder="you@example.com"><label>Password</label><input id="p" type="password" placeholder="কমপক্ষে 6 অক্ষরের দিন"><div class="actions"><button class="btn primary" id="login">Login</button><button class="btn success" id="signup">New account / Owner</button></div><p class="note" style="margin-top:16px">প্রথম account Owner হবে। পরে Owner Dashboard থেকে DSO যোগ করা যাবে।</p></div></div>`;
+function renderAuth(){appEl.innerHTML=`<div class="auth"><div class="auth-card"><div class="brand">📒 MFS Hisab Cloud</div><p class="muted">দোকানের Cash, DSO ও Customer হিসাব এক জায়গায়।</p><div id="am" class="alert hidden"></div><label>Email</label><input id="e" type="email" placeholder="you@example.com"><label>Password</label><input id="p" type="password" placeholder="কমপক্ষে 6 অক্ষরের দিন"><div class="actions"><button class="btn primary" id="login">Login</button><button class="btn success" id="signup">New account / Owner</button></div><p class="note" style="margin-top:16px">প্রথম account Owner হবে। পরে Owner Dashboard থেকে DSO যোগ করা যাবে।</p></div></div>`;
 const emailEl=$("e"), passEl=$("p"), msgEl=$("am");
 $("login").onclick=async()=>{try{await signInWithEmailAndPassword(auth,emailEl.value.trim(),passEl.value)}catch(x){msgEl.textContent=err(x);msgEl.classList.remove("hidden")}};
 $("signup").onclick=async()=>{try{if(passEl.value.length<6)throw{code:"auth/weak-password"};let c=await createUserWithEmailAndPassword(auth,emailEl.value.trim(),passEl.value);await setDoc(doc(db,"users",c.user.uid),{email:c.user.email,role:"owner",name:"Owner",createdAt:serverTimestamp()})}catch(x){msgEl.textContent=err(x);msgEl.classList.remove("hidden")}}}
-function renderSetup(){app.innerHTML=`<div class="auth"><div class="auth-card"><h2>👤 Owner Profile</h2><p class="muted">আপনার দোকানের নাম/নিজের নাম দিন।</p><label>নাম</label><input id="n" placeholder="যেমন: Albhi"><button class="btn primary" style="width:100%;margin-top:18px" id="save">Continue</button></div></div>`;
+function renderSetup(){appEl.innerHTML=`<div class="auth"><div class="auth-card"><h2>👤 Owner Profile</h2><p class="muted">আপনার দোকানের নাম/নিজের নাম দিন।</p><label>নাম</label><input id="n" placeholder="যেমন: Albhi"><button class="btn primary" style="width:100%;margin-top:18px" id="save">Continue</button></div></div>`;
 $("save").onclick=async()=>{try{await setDoc(doc(db,"users",me.uid),{email:me.email,role:"owner",name:$("n").value.trim()||"Owner",createdAt:serverTimestamp()});location.reload()}catch(e){startupError(e)}}}
 async function load(){let owner=profile.role==="owner"?me.uid:profile.ownerId;
 let cq=profile.role==="owner"?query(collection(db,"customers"),where("ownerId","==",owner)):query(collection(db,"customers"),where("dsoId","==",me.uid));
 let tq=profile.role==="owner"?query(collection(db,"transactions"),where("ownerId","==",owner)):query(collection(db,"transactions"),where("dsoId","==",me.uid));
 let cs=await getDocs(cq),ts=await getDocs(tq);cache.customers=cs.docs.map(x=>({id:x.id,...x.data()}));cache.tx=ts.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,300);
 if(profile.role==="owner"){let ds=await getDocs(query(collection(db,"users"),where("ownerId","==",owner),where("role","==","dso")));cache.dsos=ds.docs.map(x=>({id:x.id,...x.data()}))}else cache.dsos=[]}
-function renderApp(){app.innerHTML=`<header class="top"><div class="brand">📒 MFS Hisab Cloud</div><div class="row"><span class="muted">${esc(profile.name)} • ${profile.role==="owner"?"Owner":"DSO"}</span><button class="btn ghost small" id="logout">Logout</button></div></header><main class="wrap"><div id="toast" class="alert hidden"></div><div class="nav" id="nav"></div><div id="view"></div></main>`;$("logout").onclick=()=>signOut(auth);nav();go("dashboard")}
+function renderApp(){appEl.innerHTML=`<header class="top"><div class="brand">📒 MFS Hisab Cloud</div><div class="row"><span class="muted">${esc(profile.name)} • ${profile.role==="owner"?"Owner":"DSO"}</span><button class="btn ghost small" id="logout">Logout</button></div></header><main class="wrap"><div id="toast" class="alert hidden"></div><div class="nav" id="nav"></div><div id="view"></div></main>`;$("logout").onclick=()=>signOut(auth);nav();go("dashboard")}
 function nav(){let a=profile.role==="owner"?[["dashboard","🏠 Dashboard"],["customers","👥 Customers"],["dsos","👤 DSO"],["transactions","📒 Transactions"]]:[["dashboard","🏠 My Dashboard"],["customers","👥 Customers"],["transactions","📒 My Transactions"]];$("nav").innerHTML=a.map(x=>`<button data-k="${x[0]}">${x[1]}</button>`).join("");document.querySelectorAll("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.k))}
 async function go(k){
   active=k;
