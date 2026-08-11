@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: mfs-hisab
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: ./public
+    autoDeploy: true
